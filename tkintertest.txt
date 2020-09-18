@@ -1,0 +1,339 @@
+
+import tkinter as tk
+from tkinter import *
+import tkinter
+
+def clicked_v1():
+    if var1.get() == 1 :
+        c11.select()
+        c12.select()
+        c13.select()
+        activate('e1')
+
+    else :
+        clear('e1')
+        activate('e1')
+        c11.deselect()
+        c12.deselect()
+        c13.deselect()
+
+def activate(var):
+
+    if len(var) == 2:
+        l = ['11','12','13','21','22','23','31','32','33']
+    else:
+        l = ['1','2','3']
+    for v in l:
+        vr = eval(var+v)
+        cvr = eval('var'+var[1:])
+        if cvr.get() == 1:
+            vr.config(state=NORMAL)
+        else:
+            vr.config(state=DISABLED)
+
+
+def clear(var):
+
+    if len(var) == 2:
+        l = ['11','12','13','21','22','23','31','32','33']
+    else:
+        l = ['1','2','3']
+    for v in l:
+        vr = eval(var+v)
+        cvr = eval('var'+var[1:])
+        c_p = eval('var'+var[1])
+        if cvr.get() == 0:
+            vr.delete(0,tk.END)
+            vr.config(state=DISABLED)
+        elif c_p.get == 1 and cvr.get == 1 :
+            vr.config(state=NORMAL)
+
+
+
+
+def clicked_v2():
+    if var2.get() == 1:
+        c21.select()
+        c22.select()
+        c23.select()
+        activate('e2')
+    else:
+        clear('e2')
+        activate('e2')
+        c21.deselect()
+        c22.deselect()
+        c23.deselect()
+def clicked_v3():
+    if var3.get() == 1:
+        c31.select()
+        c32.select()
+        c33.select()
+        activate('e3')
+    else:
+        clear('e3')
+        activate('e3')
+        c31.deselect()
+        c32.deselect()
+        c33.deselect()
+def clicked_v4():
+    if var4.get() == 1:
+        c41.select()
+        c42.select()
+        c43.select()
+        activate('e4')
+    else:
+        clear('e4')
+        activate('e4')
+        c41.deselect()
+        c42.deselect()
+        c43.deselect()
+
+
+def getData():
+    if var1.get() == 1:
+        if var11.get() == 1:
+            print('data of var11\n')
+            print(e111.get(), e112.get(), e113.get())
+        if var12.get() == 1:
+            print('data of var12\n')
+            print(e121.get(), e122.get(), e123.get())
+        if var13.get() == 1:
+            print('data of var13\n')
+            print(e131.get(), e132.get(), e133.get())
+
+    if var2.get() == 1:
+        if var21.get() == 1:
+            print('data of var21\n')
+            print(e211.get(), e212.get(), e213.get())
+        if var22.get() == 1:
+            print('data of var22\n')
+            print(e221.get(), e222.get(), e223.get())
+        if var23.get() == 1:
+            print('data of var23\n')
+            print(e231.get(), e232.get(), e233.get())
+
+    if var3.get() == 1:
+        if var31.get() == 1:
+            print('data of var31\n')
+            print(e311.get(), e312.get(), e313.get())
+        if var32.get() == 1:
+            print('data of var32\n')
+            print(e321.get(), e322.get(), e323.get())
+        if var33.get() == 1:
+            print('data of var33\n')
+            print(e331.get(), e332.get(), e333.get())
+
+    if var4.get() == 1:
+        if var41.get() == 1:
+            print('data of var41\n')
+            print(e411.get(), e412.get(), e413.get())
+        if var42.get() == 1:
+            print('data of var42\n')
+            print(e421.get(), e422.get(), e423.get())
+        if var43.get() == 1:
+            print('data of var43\n')
+            print(e431.get(), e432.get(), e433.get())
+
+
+
+
+
+
+window = tk.Tk()
+var1 = IntVar()
+c1 = Checkbutton(window, text="var1", variable=var1, command=clicked_v1)
+c1.grid(row=0, column=2)
+
+
+
+var11 = IntVar()
+c11 = Checkbutton(window, text="var11", variable=var11, command=lambda: clear('e11'))
+c11.grid(row=1, column=2)
+
+Label(window, text = "Username").grid(row=2,column=1)
+e111 = Entry(window,state=DISABLED)
+e111.grid(row=2,column=2)
+
+Label(window, text = "Username").grid(row=3,column=1)
+e112 = Entry(window,state=DISABLED)
+e112.grid(row=3,column=2)
+
+Label(window, text = "Username").grid(row=4,column=1)
+e113 = Entry(window,state=DISABLED)
+e113.grid(row=4,column=2)
+
+
+var12 = IntVar()
+c12 = Checkbutton(window, text="var12", variable=var12, command=lambda: clear('e12'))
+c12.grid(row=5, column=2)
+Label(window, text = "Username").grid(row=6,column=1)
+e121 = Entry(window,state=DISABLED)
+e121.grid(row=6,column=2)
+Label(window, text = "Username").grid(row=7,column=1)
+e122 = Entry(window,state=DISABLED)
+e122.grid(row=7,column=2)
+Label(window, text = "Username").grid(row=8,column=1)
+e123 = Entry(window,state=DISABLED)
+e123.grid(row=8,column=2)
+
+var13 = IntVar()
+c13 = Checkbutton(window, text="var13", variable=var13, command=lambda: clear('e13'))
+c13.grid(row=9, column=2)
+Label(window, text = "Username").grid(row=10,column=1)
+e131 = Entry(window,state=DISABLED)
+e131.grid(row=10,column=2)
+Label(window, text = "Username").grid(row=11,column=1)
+e132 = Entry(window,state=DISABLED)
+e132.grid(row=11,column=2)
+Label(window, text = "Username").grid(row=12,column=1)
+e133 = Entry(window,state=DISABLED)
+e133.grid(row=12,column=2)
+
+
+
+
+var2 = IntVar()
+c2 = Checkbutton(window, text="var2", variable=var2, command=clicked_v2)
+c2.grid(row=0, column=4)
+
+var21 = IntVar()
+c21  = Checkbutton(window, text="var21", variable=var21, command=lambda: clear('e21'))
+c21.grid(row=1, column=4)
+Label(window, text = "Username").grid(row=2,column=3)
+e211 = Entry(window,state=DISABLED)
+e211.grid(row=2,column=4)
+Label(window, text = "Username").grid(row=3,column=3)
+e212 = Entry(window,state=DISABLED)
+e212.grid(row=3,column=4)
+Label(window, text = "Username").grid(row=4,column=3)
+e213 = Entry(window,state=DISABLED)
+e213.grid(row=4,column=4)
+
+
+
+var22 = IntVar()
+c22 = Checkbutton(window, text="var22", variable=var22, command=lambda: clear('e22'))
+c22.grid(row=5, column=4)
+Label(window, text = "Username").grid(row=6,column=3)
+e221 = Entry(window,state=DISABLED)
+e221.grid(row=6,column=4)
+Label(window, text = "Username").grid(row=7,column=3)
+e222 = Entry(window,state=DISABLED)
+e222.grid(row=7,column=4)
+Label(window, text = "Username").grid(row=8,column=3)
+e223 = Entry(window,state=DISABLED)
+e223.grid(row=8,column=4)
+
+
+
+
+
+var23 = IntVar()
+c23= Checkbutton(window, text="var23", variable=var23, command=lambda: clear('e23'))
+c23.grid(row=9, column=4)
+Label(window, text = "Username").grid(row=10,column=3)
+e231 = Entry(window,state=DISABLED)
+e231.grid(row=10,column=4)
+Label(window, text = "Username").grid(row=11,column=3)
+e232 = Entry(window,state=DISABLED)
+e232.grid(row=11,column=4)
+Label(window, text = "Username").grid(row=12,column=3)
+e233 = Entry(window,state=DISABLED)
+e233.grid(row=12,column=4)
+
+
+var3 = IntVar()
+c3 = Checkbutton(window, text="var3", variable=var3, command=clicked_v3)
+c3.grid(row=0, column=6)
+
+var31 = IntVar()
+c31 = Checkbutton(window, text="var31", variable=var31, command=lambda: clear('e31'))
+c31.grid(row=1, column=6)
+Label(window, text = "Username").grid(row=2,column=5)
+e311 = Entry(window,state=DISABLED)
+e311.grid(row=2,column=6)
+Label(window, text = "Username").grid(row=3,column=5)
+e312 = Entry(window,state=DISABLED)
+e312.grid(row=3,column=6)
+Label(window, text = "Username").grid(row=4,column=5)
+e313 = Entry(window,state=DISABLED)
+e313.grid(row=4,column=6)
+
+
+var32 = IntVar()
+c32 = Checkbutton(window, text="var32", variable=var32, command=lambda: clear('e32'))
+c32.grid(row=5, column=6)
+Label(window, text = "Username").grid(row=6,column=5)
+e321 = Entry(window,state=DISABLED)
+e321.grid(row=6,column=6)
+Label(window, text = "Username").grid(row=7,column=5)
+e322 = Entry(window,state=DISABLED)
+e322.grid(row=7,column=6)
+Label(window, text = "Username").grid(row=8,column=5)
+e323 = Entry(window,state=DISABLED)
+e323.grid(row=8,column=6)
+
+var33 = IntVar()
+c33 = Checkbutton(window, text="var33", variable=var33, command=lambda: clear('e33'))
+c33.grid(row=9, column=6)
+Label(window, text = "Username").grid(row=10,column=5)
+e331 = Entry(window,state=DISABLED)
+e331.grid(row=10,column=6)
+Label(window, text = "Username").grid(row=11,column=5)
+e332 = Entry(window,state=DISABLED)
+e332.grid(row=11,column=6)
+Label(window, text = "Username").grid(row=12,column=5)
+e333 = Entry(window,state=DISABLED)
+e333.grid(row=12,column=6)
+
+
+
+
+var4 = IntVar()
+c4 = Checkbutton(window, text="var4", variable=var4, command=clicked_v4)
+c4.grid(row=0, column=8)
+
+
+var41 = IntVar()
+c41 = Checkbutton(window, text="var41", variable=var41, command=lambda: clear('e41'))
+c41.grid(row=1, column=8)
+Label(window, text = "Username").grid(row=2,column=7)
+e411 = Entry(window,state=DISABLED)
+e411.grid(row=2,column=8)
+Label(window, text = "Username").grid(row=3,column=7)
+e412 = Entry(window,state=DISABLED)
+e412.grid(row=3,column=8)
+Label(window, text = "Username").grid(row=4,column=7)
+e413 = Entry(window,state=DISABLED)
+e413.grid(row=4,column=8)
+
+var42 = IntVar()
+c42 = Checkbutton(window, text="var42", variable=var42, command=lambda: clear('e42'))
+c42.grid(row=5, column=8)
+Label(window, text = "Username").grid(row=6,column=7)
+e421 = Entry(window,state=DISABLED)
+e421.grid(row=6,column=8)
+Label(window, text = "Username").grid(row=7,column=7)
+e422 = Entry(window,state=DISABLED)
+e422.grid(row=7,column=8)
+Label(window, text = "Username").grid(row=8,column=7)
+e423 = Entry(window,state=DISABLED)
+e423.grid(row=8,column=8)
+
+var43 = IntVar()
+c43 = Checkbutton(window, text="var43", variable=var43, command=lambda: clear('e43'))
+c43.grid(row=9, column=8)
+Label(window, text = "Username").grid(row=10,column=7)
+e431 = Entry(window,state=DISABLED)
+e431.grid(row=10,column=8)
+Label(window, text = "Username").grid(row=11,column=7)
+e432 = Entry(window,state=DISABLED)
+e432.grid(row=11,column=8)
+Label(window, text = "Username").grid(row=12,column=7)
+e433 = Entry(window,state=DISABLED)
+e433.grid(row=12,column=8)
+
+b = Button(window,text="Get",command=getData)
+b.grid(row=13,column=8,pady=4)
+
+window.mainloop()
