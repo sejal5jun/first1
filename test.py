@@ -2,8 +2,8 @@ import tkinter as tk
 from tkinter import *
 import tkinter
 
-dcps = {1: '',2:'DTC1',6:'DTC2',10:'DTC3'}
-main_col = {2:'MilLamp',4: 'RedStopLamp',6: 'AmberWarningLamp',8: 'ProtectLamp'}
+dcps = {1: '',2:'DTC1',6:'DTC2',10:'DTC3'}#keys as rows
+main_col = {2:'MilLamp',4: 'RedStopLamp',6: 'AmberWarningLamp',8: 'ProtectLamp'}#keys as rows
 main_col_keys = {'MilLamp':'2','RedStopLamp':'4','AmberWarningLamp':'6','ProtectLamp':'8'}
 entry_cords = {
     '12':{'22':{'32','42','52'},'62':{'72','82','92'},'102':{'112','122','132'}},
@@ -11,6 +11,13 @@ entry_cords = {
     '16':{'26':{'36','46','56'},'66':{'76','86','96'},'106':{'116','126','136'}},
     '18':{'28':{'38','48','58'},'68':{'78','88','98'},'108':{'118','128','138'}},
 }
+dtcs = {}
+count = 1
+for l in entry_cords.values():
+    for m in l.keys():
+        dtcs[m] = 'DTC'+str(count)
+        count = count+1
+
 att_label = {0:'SPN',1:'FMI',2:'COUNT'}
 main_label = {0:'MilLamp',1:'RedStopLamp',2:'AmberWarningLamp',3:'ProtectLamp'}
 labels = {
@@ -30,15 +37,15 @@ class Ui():
                 if i in dcps.keys():
                     if col < 10:
                         arg = str(i)+str(col)
-                        cb_var = IntVar()
-                        cb = Checkbutton(self.window, onvalue=1, offvalue=0, text = main_col[col] if i == 1 else dcps[i], variable=cb_var)
+                        cb_var = IntVar(value=1)
+                        cb = Checkbutton(self.window, onvalue=1, offvalue=0, text = main_col[col] if i == 1 else dtcs[arg], variable=cb_var)
                         cb.grid(row=i, column=col)
                         cb.bind("<Button-1>",lambda event, self=self,arg=arg:self.clicked(event,arg))
                         self.cbList[arg] = cb
                         self.cbb_var[arg] = cb_var
                 else:
                     if j%2 == 0:
-                        en = Entry(window,state=DISABLED)
+                        en = Entry(window)
                         en.grid(row=i,column=j)
                         self.entry[str(i)+str(j)] = en
                     else:
@@ -56,10 +63,18 @@ class Ui():
                     for k in j:
                         self.entry[k].delete(0, tk.END)
                         self.entry[k].config(state=DISABLED)
+            else:
+                for i,j in entry_cords[arg].items():
+                    if self.cbb_var[i].get() == 1:
+                        for k in j:
+                            self.entry[k].config(state=NORMAL)
+
         else:
             new = int(arg) + 10
+            parent = '1'+str(int(arg)%10)
             for j in range(0,3):
-                if self.cbb_var[arg].get() == 0:
+                #curent stage gives 0 and parent gives 1 for onvalue
+                if self.cbb_var[arg].get() == 0 and self.cbb_var[parent].get() == 1:
                     self.entry[str(new)].config(state=NORMAL)
                 else:
                     self.entry[str(new)].delete(0, tk.END)
