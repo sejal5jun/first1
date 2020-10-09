@@ -18,3 +18,13 @@ string strvalue(string str, string needle)
         return value;
     }
 }
+
+
+int main()
+{
+    string str = "key1@time1#p1:v1,p2:v2,p3:v3";
+    string val = strvalue(str,"p1");
+    cout << val << endl; 
+   
+    return 0;
+}
