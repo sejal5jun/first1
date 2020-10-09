@@ -1,2 +1,20 @@
-first file
-i have edited the first file
+string strvalue(string str, string needle)
+{
+    string value = "";
+    if(needle == "#")
+    {
+        string pre_value = str.substr(str.find("@")+1,str.find(needle));
+        value = pre_value.substr(0,pre_value.find(needle));
+        return value;
+    }
+    else if(needle == "@"){
+        value =  str.substr(0,str.find(needle));
+        return value;
+    }
+    else
+    {
+        string pre_value = str.substr(str.find(needle),str.find_last_of(","));
+        value = pre_value.substr(0,pre_value.find(","));
+        return value;
+    }
+}
