@@ -1,0 +1,137 @@
+void TimeSeriesApp::SendDataJSON_SaveLocal()
+{
+	std::string str = "";
+	std::map<std::string, bool> isDTCOn;
+	std::map<std::string, int> file_counter;
+	boost::circular_buffer_space_optimized<std::string> PreDTC_VehicleBuffer(PREDTC_VEHICLE_BUFFER_SIZE);
+	std::map<std::string, std::map<std::string, std::string>> preDTC_ParamMap;
+	std::map<std::string, std::map<std::string, std::string>> postDTC_ParamMap;
+
+	std::map<std::string, std::string> preDTC_sub_paramValue;
+	std::map<std::string, std::string> preDTC_final_paramValue;
+	std::map<std::string, std::string> preDTC_final_time;
+
+	std::map<std::string, std::string> postDTC_sub_paramValue;
+	std::map<std::string, std::string> postDTC_final_paramValue;
+
+	//std::ofstream file_Json_post;
+	//std::string filename_post = "Post_Snapshot.txt";
+	//file_Json_post.open(filename_post, std::ios::out);
+
+	//std::ofstream file_Json_pre;
+	//std::string filename_pre = "Pre_Snapshot.txt";
+	//file_Json_pre.open(filename_pre, std::ios::out);
+
+	while (1)
+	{
+		while (!TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.empty())
+		{
+			mtxQueue.lock();
+
+			std::string key = TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().substr(0, TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().find("#"));
+			std::string value = TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().substr(TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().find("#") + 1, std::string::npos);
+
+			TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.pop();
+
+			mtxQueue.unlock();
+
+			m_vehicleDataMap.clear();
+			preDTC_ParamMap.clear();
+			postDTC_ParamMap.clear();
+
+			preDTC_sub_paramValue.clear();
+			preDTC_final_paramValue.clear();
+			preDTC_final_time.clear();
+			postDTC_sub_paramValue.clear();
+			postDTC_final_paramValue.clear();
+
+			if (key == m_previous_time || m_previous_time == "")
+			{
+				if (m_ParameterMap.count(key) > 0)
+					m_ParameterMap[key] = m_ParameterMap[key] + "," + value;
+				else
+					m_ParameterMap[key] = value;
+			}
+			else
+			{
+				m_ParameterMap[key] = value;
+				m_vehicleDataMap.insert(std::make_pair(m_previous_time, m_ParameterMap[m_previous_time]));
+			}
+			m_previous_time = key;
+
+			for (auto it_map = m_vehicleDataMap.begin(); it_map != m_vehicleDataMap.end(); ++it_map)
+			{
+				str = it_map->first + "#" + it_map->second;
+				PreDTC_VehicleBuffer.push_back(str);
+
+				if (PreDTC_VehicleBuffer.size() >= PREDTC_VEHICLE_BUFFER_SIZE)
+				{
+					std::cout << "Vehicle Data Timing = " << it_map->first << std::endl;
+					for (auto dtc_vect = 0; dtc_vect < m_DTCData.size(); ++dtc_vect)
+					{
+						if (m_DTCMasterData.count(m_DTCData[dtc_vect]) > 0 && isDTCOn[m_DTCData[dtc_vect]] == false)
+						{
+							std::cout << "DTC Timing = " << it_map->first << std::endl;
+							isDTCOn[m_DTCData[dtc_vect]] = true;
+							file_counter[m_DTCData[dtc_vect]] = 1;
+						}
+						if (isDTCOn[m_DTCData[dtc_vect]])
+						{
+							std::vector<std::string> paramVect = m_DTCMasterData.at(m_DTCData[dtc_vect]);
+							for (auto it_vect = 0; it_vect < paramVect.size(); ++it_vect)
+							{
+								bool isParamPresent = boost::algorithm::contains(str, paramVect[it_vect]);
+								if (isParamPresent)
+								{
+									// Pre DTC buffer Data goes from here
+									for (auto pre_it = 0; pre_it < (PreDTC_VehicleBuffer.size() - 1); ++pre_it)
+									{
+										preDTC_sub_paramValue[m_DTCData[dtc_vect]] = PreDTC_VehicleBuffer[pre_it].substr(PreDTC_VehicleBuffer[pre_it].find(paramVect[it_vect]), PreDTC_VehicleBuffer[pre_it].find_last_of(","));
+										preDTC_final_paramValue[m_DTCData[dtc_vect]] = preDTC_sub_paramValue[m_DTCData[dtc_vect]].substr(0, preDTC_sub_paramValue[m_DTCData[dtc_vect]].find(","));
+
+										preDTC_final_time[m_DTCData[dtc_vect]] = PreDTC_VehicleBuffer[pre_it].substr(0, PreDTC_VehicleBuffer[pre_it].find("#"));
+
+										if (preDTC_ParamMap[m_DTCData[dtc_vect]].count(preDTC_final_time[m_DTCData[dtc_vect]]) > 0)
+											preDTC_ParamMap[m_DTCData[dtc_vect]][preDTC_final_time[m_DTCData[dtc_vect]]] = preDTC_ParamMap[m_DTCData[dtc_vect]][preDTC_final_time[m_DTCData[dtc_vect]]] + "," + preDTC_sub_paramValue[m_DTCData[dtc_vect]];
+										else
+											preDTC_ParamMap[m_DTCData[dtc_vect]][preDTC_final_time[m_DTCData[dtc_vect]]] = preDTC_final_paramValue[m_DTCData[dtc_vect]];
+									}
+
+									// Post DTC buffer Data goes from here
+									postDTC_sub_paramValue[m_DTCData[dtc_vect]] = it_map->second.substr(it_map->second.find(paramVect[it_vect]), it_map->second.find_last_of(","));
+									postDTC_final_paramValue[m_DTCData[dtc_vect]] = postDTC_sub_paramValue[m_DTCData[dtc_vect]].substr(0, postDTC_sub_paramValue[m_DTCData[dtc_vect]].find(","));
+
+									if (postDTC_ParamMap[m_DTCData[dtc_vect]].count(it_map->first) > 0)
+										postDTC_ParamMap[m_DTCData[dtc_vect]][it_map->first] = postDTC_ParamMap[m_DTCData[dtc_vect]][it_map->first] + "," + postDTC_sub_paramValue[m_DTCData[dtc_vect]];
+									else
+										postDTC_ParamMap[m_DTCData[dtc_vect]][it_map->first] = postDTC_final_paramValue[m_DTCData[dtc_vect]];
+								}
+							}
+
+							for (auto ii = preDTC_ParamMap.begin(); ii != preDTC_ParamMap.end(); ++ii)
+							{
+								//std::cout << m_DTCData[dtc_vect] + "@" + ii->first + "#" + ii->second << "\n";
+								//file_Json_pre << ii->first + "#" + ii->second << "\n";
+							}
+							//file_Json_pre.close();
+
+							if (file_counter[m_DTCData[dtc_vect]] <= POSTDTC_VEHICLE_BUFFER_SIZE)
+							{
+								std::cout << m_DTCData[dtc_vect] + "@" + it_map->first + "#" + postDTC_ParamMap[m_DTCData[dtc_vect]][it_map->first] << "\n";
+								//file_Json_post << it_map->first + "#" + postDTC_ParamMap[it_map->first] << "\n";
+								if (file_counter[m_DTCData[dtc_vect]] == POSTDTC_VEHICLE_BUFFER_SIZE)
+								{
+									//file_Json_post.close();
+									isDTCOn[m_DTCData[dtc_vect]] = false;
+								}
+								file_counter[m_DTCData[dtc_vect]]++;
+							}
+						}
+					}
+				}
+			}
+		}
+		std::unique_lock<std::mutex> lck(mtxQueue);
+		cvQueue.wait(lck);
+	}
+}
