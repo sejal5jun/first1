@@ -1,0 +1,245 @@
+void TimeSeriesApp::SendDataJSON_SaveLocal()
+{
+	std::string str = "";
+	std::map<std::string, bool> isDTCOn = { {"", false} };
+	std::map<std::string, int> file_counter = { {"", 0} };
+	std::map<std::string, int> dtc_cooling_period_counter = { { "", 0 } };
+	std::map<std::string, int> Counter_ForNoParam = { { "", 0 } };
+	std::map <std::string, std::string> ParametersMap;
+	boost::circular_buffer_space_optimized<std::string> PreDTC_VehicleBuffer(PREDTC_VEHICLE_BUFFER_SIZE);
+	std::map<std::string, std::map<std::string, std::string>> preDTC_DataMap;
+	std::map<std::string, std::map<std::string, std::string>> postDTC_DataMap;
+
+	std::map<std::string, std::string> preDTC_params;
+	std::map<std::string, std::string> preDTC_time;
+	std::map<std::string, std::string> postDTC_params;
+
+	std::map<std::string, std::ofstream> file_Json_pre;
+	std::map<std::string, std::ofstream> file_Json_post;
+
+	std::set<std::string> active_DTCs;
+	std::set<std::string> active_DTCsForCoolingPeriod;
+
+	if (fs::exists(DTC_SNAPSHOTS_PATH) == false)
+	{
+		std::cout << "DTCSnapshots Directory does not exist, Creating Dir" << std::endl;
+		bool ret = fs::create_directory(DTC_SNAPSHOTS_PATH);
+	}
+
+	eDTCSnapshot_State Snapshot_State = DTC_SNAPSHOT_INIT;
+
+	while (1)
+	{
+		/*DTC snapshot Folder clear after n number of days/hrs. ----> starts*/
+		try 
+		{
+			for (const auto& p : files_older_than(DTC_SNAPSHOTS_PATH, DTC_SNAPSHOT_FOLDER_CLEANUP_TIME))
+			{
+				fs::remove(p);
+			}
+		}
+		catch (const fs::filesystem_error& err){
+			std::cout << "filesystem error: " << err.what() << std::endl;
+		}
+		/*DTC snapshot Folder clear after n number of days/hrs. ----> end*/
+
+		while (!TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.empty())
+		{
+			mtxQueue.lock();
+
+			std::string key = TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().substr(0, TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().find("#"));
+			std::string value = TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().substr(TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.front().find("#") + 1, std::string::npos);
+
+			TimeSeriesApp::TimeSeriesAppInstance->haraldMsgDb.pop();
+
+			mtxQueue.unlock();
+
+			m_vehicleDataMap.clear();
+			preDTC_DataMap.clear();
+			postDTC_DataMap.clear();
+			preDTC_params.clear();
+			preDTC_time.clear();
+			postDTC_params.clear();
+
+			if (key == m_previous_time || m_previous_time == "")
+			{
+				if (ParametersMap.count(key) > 0)
+					ParametersMap[key] = ParametersMap[key] + "," + value;
+				else
+					ParametersMap[key] = value;
+			}
+			else
+			{
+				m_vehicleDataMap.insert(std::make_pair(m_previous_time, ParametersMap[m_previous_time]));
+				ParametersMap.clear();
+				ParametersMap[key] = value;
+			}
+			m_previous_time = key;
+
+			for (auto it_map = m_vehicleDataMap.begin(); it_map != m_vehicleDataMap.end(); ++it_map)
+			{
+				str = it_map->first + "#" + it_map->second;
+				PreDTC_VehicleBuffer.push_back(str);
+				
+				if (PreDTC_VehicleBuffer.size() >= PREDTC_VEHICLE_BUFFER_SIZE)
+				{
+					switch (Snapshot_State)
+					{
+					case DTC_SNAPSHOT_INIT:
+					{
+						std::cout << "Vehicle Data Timing = " << it_map->first << std::endl;
+						for (auto it_DTCVect = 0; it_DTCVect < m_DTCData.size(); ++it_DTCVect)
+						{
+							if ((m_DTCMasterData.count(m_DTCData[it_DTCVect]) > 0) && (isDTCOn[m_DTCData[it_DTCVect]] == false))
+							{
+								//std::cout << "DTC Snapshot Capture Timing = " << it_map->first << std::endl;
+								std::string filetime = it_map->first;
+								boost::replace_all(filetime, ":", "_");
+								file_Json_pre[m_DTCData[it_DTCVect]].open((DTC_SNAPSHOTS_PATH"PreSnapshot_" + m_DTCData[it_DTCVect] + "_" + YukonSerialNumber + "_" + filetime + ".txt"), std::ios_base::out);
+								file_Json_pre[m_DTCData[it_DTCVect]] << "{";
+								file_Json_post[m_DTCData[it_DTCVect]].open((DTC_SNAPSHOTS_PATH"PostSnapshot_" + m_DTCData[it_DTCVect] + "_" + YukonSerialNumber + "_" + filetime + ".txt"), std::ios_base::out);
+								file_Json_post[m_DTCData[it_DTCVect]] << "{";
+
+								isDTCOn[m_DTCData[it_DTCVect]] = true;
+								file_counter[m_DTCData[it_DTCVect]] = 1;
+								dtc_cooling_period_counter[m_DTCData[it_DTCVect]] = 1;
+
+								active_DTCs.insert(m_DTCData[it_DTCVect]);
+								active_DTCsForCoolingPeriod.insert(m_DTCData[it_DTCVect]);
+							}
+						}
+
+						Snapshot_State = DTC_SNAPSHOT_CAPTURING;
+					}
+					break;
+
+					case DTC_SNAPSHOT_CAPTURING:
+					{
+						// Running loop for active DTCs only
+						for (auto it_DTC = active_DTCs.begin(); it_DTC != active_DTCs.end(); ++it_DTC)
+						{
+							std::vector<std::string> paramVect = m_DTCMasterData.at(*it_DTC);
+
+							// Fill Pre-DTC Data Map ---> starts from here
+							// Running Pre-DTC loop for one time only while capturing data 
+							if (file_counter[*it_DTC] == 1)
+							{
+								for (auto it_pre = 0; it_pre < (PreDTC_VehicleBuffer.size() - 1); ++it_pre)
+								{
+									Counter_ForNoParam[*it_DTC] = 0;
+									for (auto it_vect = 0; it_vect < paramVect.size(); ++it_vect)
+									{
+										bool isPreParamPresent = boost::algorithm::contains(PreDTC_VehicleBuffer[it_pre], paramVect[it_vect]);
+										if (isPreParamPresent)
+										{
+											Counter_ForNoParam[*it_DTC]++;
+											preDTC_params[*it_DTC] = PreDTC_VehicleBuffer[it_pre].substr(PreDTC_VehicleBuffer[it_pre].find(paramVect[it_vect]), PreDTC_VehicleBuffer[it_pre].find_last_of(","));
+											preDTC_params[*it_DTC] = preDTC_params[*it_DTC].substr(0, preDTC_params[*it_DTC].find(","));
+
+											preDTC_time[*it_DTC] = PreDTC_VehicleBuffer[it_pre].substr(0, PreDTC_VehicleBuffer[it_pre].find("#"));
+
+											if (preDTC_DataMap[*it_DTC].count(preDTC_time[*it_DTC]) > 0)
+												preDTC_DataMap[*it_DTC][preDTC_time[*it_DTC]] = preDTC_DataMap[*it_DTC][preDTC_time[*it_DTC]] + ",\"" + preDTC_params[*it_DTC];
+											else
+												preDTC_DataMap[*it_DTC][preDTC_time[*it_DTC]] = preDTC_params[*it_DTC];
+										}
+									}
+									// Pre DTC buffer Data if vehicle Params are not present
+									if (Counter_ForNoParam[*it_DTC] == 0)
+									{
+										preDTC_time[*it_DTC] = PreDTC_VehicleBuffer[it_pre].substr(0, PreDTC_VehicleBuffer[it_pre].find("#"));
+										preDTC_DataMap[*it_DTC][preDTC_time[*it_DTC]] = preDTC_params[*it_DTC];
+									}
+								}
+
+								// capturing Pre-DTC Data in JSON Format ----> starts from here
+								for (auto it1 = preDTC_DataMap[*it_DTC].begin(); it1 != preDTC_DataMap[*it_DTC].end(); ++it1)
+								{
+									if (it1 == preDTC_DataMap[*it_DTC].begin())
+									{
+										file_Json_pre[*it_DTC] << JSONFormattedstr(it1->first, it1->second, START_PARAMETER);
+									}
+									else if (std::next(it1) == preDTC_DataMap[*it_DTC].end())
+									{
+										file_Json_pre[*it_DTC] << JSONFormattedstr(it1->first, it1->second, LAST_PARAMETER);
+									}
+									else
+									{
+										file_Json_pre[*it_DTC] << JSONFormattedstr(it1->first, it1->second, MIDDLE_PARAMETER);
+									}
+								}
+								file_Json_pre[*it_DTC].close();
+							}
+
+							// Fill Post-DTC Data Map ---> starts from here
+							for (auto it_vect = 0; it_vect < paramVect.size(); ++it_vect)
+							{
+								bool isPostParamPresent = boost::algorithm::contains(str, paramVect[it_vect]);
+								if (isPostParamPresent)
+								{
+									postDTC_params[*it_DTC] = it_map->second.substr(it_map->second.find(paramVect[it_vect]), it_map->second.find_last_of(","));
+									postDTC_params[*it_DTC] = postDTC_params[*it_DTC].substr(0, postDTC_params[*it_DTC].find(","));
+
+									if (postDTC_DataMap[*it_DTC].count(it_map->first) > 0)
+										postDTC_DataMap[*it_DTC][it_map->first] = postDTC_DataMap[*it_DTC][it_map->first] + ",\"" + postDTC_params[*it_DTC];
+									else
+										postDTC_DataMap[*it_DTC][it_map->first] = postDTC_params[*it_DTC];
+								}
+							}
+
+							// capturing Post-DTC Data in JSON Format ----> starts from here
+							if (file_counter[*it_DTC] <= POSTDTC_VEHICLE_BUFFER_SIZE)
+							{
+								if (file_counter[*it_DTC] == 1)
+								{
+									file_Json_post[*it_DTC] << JSONFormattedstr(it_map->first, postDTC_DataMap[*it_DTC][it_map->first], START_PARAMETER);
+								}
+								else if (file_counter[*it_DTC] < POSTDTC_VEHICLE_BUFFER_SIZE)
+								{
+									file_Json_post[*it_DTC] << JSONFormattedstr(it_map->first, postDTC_DataMap[*it_DTC][it_map->first], MIDDLE_PARAMETER);
+								}
+								if (file_counter[*it_DTC] == POSTDTC_VEHICLE_BUFFER_SIZE)
+								{
+									file_Json_post[*it_DTC] << JSONFormattedstr(it_map->first, postDTC_DataMap[*it_DTC][it_map->first], LAST_PARAMETER);
+
+									file_Json_post[*it_DTC].close();
+									active_DTCs.erase(*it_DTC);
+									Snapshot_State = DTC_SNAPSHOT_COOLING_PERIOD;
+								}
+								file_counter[*it_DTC]++;
+							}
+						}	
+					}
+					break;
+
+					case DTC_SNAPSHOT_COOLING_PERIOD:
+					{
+						// Running loop to take cooling period for DTC
+						for (auto it_cooling = active_DTCsForCoolingPeriod.begin(); it_cooling != active_DTCsForCoolingPeriod.end(); ++it_cooling)
+						{
+							if (DTC_COOLING_PERIOD != 0 && dtc_cooling_period_counter[*it_cooling] == DTC_COOLING_PERIOD)
+							{
+								isDTCOn[*it_cooling] = false;
+								active_DTCsForCoolingPeriod.erase(*it_cooling);
+							}
+							else if (DTC_COOLING_PERIOD == 0 && dtc_cooling_period_counter[*it_cooling] == POSTDTC_VEHICLE_BUFFER_SIZE)
+							{
+								isDTCOn[*it_cooling] = false;
+								active_DTCsForCoolingPeriod.erase(*it_cooling);
+							}
+							++dtc_cooling_period_counter[*it_cooling];
+						}
+						m_DTCData.clear();
+						Snapshot_State = DTC_SNAPSHOT_INIT;
+					}
+					break;
+					default:
+						break;
+					}
+				}
+			}
+		}
+		std::unique_lock<std::mutex> lck(mtxQueue);
+		cvQueue.wait(lck);
+	}
+}
