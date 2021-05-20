@@ -1,0 +1,125 @@
+rO0ABXNyADVjb20uZGVlcmUuaG9zdGluZnJhLmRvbWFpbi5Ib3N0SW5mcmFUZWxlbWF0aWNzTWVzc2FnZSvGEAyHyxwnAgASWgAOZmlsZUF0dGFjaG1lbnRaABBpc1N1cHBvcnRlZEJ5VE1QWgARc2VuZENvcnJlbGF0aW9uSWRMAAVhcHBJZHQAE0xqYXZhL2xhbmcvSW50ZWdlcjtMABBhcmNoaXZlU2Vzc2lvbklkdAAQTGphdmEvbGFuZy9Mb25nO0wADGNvbW1EZXZpY2VJZHEAfgACTAANY29ycmVsYXRpb25JZHEAfgACTAAIZGV2aWNlSWRxAH4AAUwAC2Z0c0ZpbGVQYXRodAASTGphdmEvbGFuZy9TdHJpbmc7TAAObGFzdFVwZGF0ZVRpbWV0ABRMamF2YS91dGlsL0NhbGVuZGFyO0wAGWxlZ2FjeU1lc3NhZ2VDcmVhdGlvblRpbWVxAH4ABEwACW1hY2hpbmVJZHEAfgACTAANbWVzc2FnZVR5cGVJZHEAfgABTAANbmV0d29ya1R5cGVJZHEAfgABWwAHcGF5bG9hZHQAAltCTAALcGF5bG9hZFNpemVxAH4AAUwADXByaW9yaXR5Q2xhc3N0ABFMamF2YS9sYW5nL1Nob3J0O0wADHJvdXRpbmdDbGFzc3EAfgABeHAAAABzcgARamF2YS5sYW5nLkludGVnZXIS4qCk94GHOAIAAUkABXZhbHVleHIAEGphdmEubGFuZy5OdW1iZXKGrJUdC5TgiwIAAHhwAAAAIHBzcgAOamF2YS5sYW5nLkxvbmc7i+SQzI8j3wIAAUoABXZhbHVleHEAfgAJAAAAAAAP+blwc3EAfgAIAAonxnBwcHNxAH4ACwAAAAAACF1Hc3EAfgAIAAAAinNxAH4ACAAAAAJ1cgACW0Ks8xf4BghU4AIAAHhwAAAAEAEZKcNOA4sBUQAEBQAAAcdzcQB+AAgAAAAQcHA=
+
+
+
+
+
+b"\xac\xed\x00\x05sr\x005com.deere.hostinfra.domain.HostInfraTelematicsMessage+\xc6\x10\x0c\x87\xcb\x1c'\x02\x00\x12Z\x00\x0efileAttachmentZ\x00\x10isSupportedByTMPZ\x00\x11sendCorrelationIdL\x00\x05appIdt\x00\x13Ljava/lang/Integer;L\x00\x10archiveSessionIdt\x00\x10Ljava/lang/Long;L\x00\x0ccommDeviceIdq\x00~\x00\x02L\x00\rcorrelationIdq\x00~\x00\x02L\x00\x08deviceIdq\x00~\x00\x01L\x00\x0bftsFilePatht\x00\x12Ljava/lang/String;L\x00\x0elastUpdateTimet\x00\x14Ljava/util/Calendar;L\x00\x19legacyMessageCreationTimeq\x00~\x00\x04L\x00\tmachineIdq\x00~\x00\x02L\x00\rmessageTypeIdq\x00~\x00\x01L\x00\rnetworkTypeIdq\x00~\x00\x01[\x00\x07payloadt\x00\x02[BL\x00\x0bpayloadSizeq\x00~\x00\x01L\x00\rpriorityClasst\x00\x11Ljava/lang/Short;L\x00\x0croutingClassq\x00~\x00\x01xp\x00\x00\x00sr\x00\x11java.lang.Integer\x12\xe2\xa0\xa4\xf7\x81\x878\x02\x00\x01I\x00\x05valuexr\x00\x10java.lang.Number\x86\xac\x95\x1d\x0b\x94\xe0\x8b\x02\x00\x00xp\x00\x00\x00 psr\x00\x0ejava.lang.Long;\x8b\xe4\x90\xcc\x8f#\xdf\x02\x00\x01J\x00\x05valuexq\x00~\x00\t\x00\x00\x00\x00\x00\x0f\xf9\xb9psq\x00~\x00\x08\x00\n'\xc6pppsq\x00~\x00\x0b\x00\x00\x00\x00\x00\x08]Gsq\x00~\x00\x08\x00\x00\x00\x8asq\x00~\x00\x08\x00\x00\x00\x02ur\x00\x02[B\xac\xf3\x17\xf8\x06\x08T\xe0\x02\x00\x00xp\x00\x00\x00\x10\x01\x19)\xf2\xde\x03\x8b\x01Q\x00\x04\x05\x00\x00\x01\xcbsq\x00~\x00\x08\x00\x00\x00\x10pp"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import json
+import argparse
+import logging
+import requests
+from aws_requests_auth.aws_auth import AWSRequestsAuth
+import boto3
+import os
+import base64
+import javaobj
+import marshal
+import pickle
+
+
+def main(host, region):
+    aws_auth = get_auth(host, region)
+    headers = {'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+                'Accept': 'application/json',
+                'x-api-key': 'QxuxG8phYD3CvmoQrqdOr4K1sd8VoneU6iVUaSM9'}
+    params = {'startDate': '2021-05-18T00:00:00.000Z', 'endDate': '2021-05-18T10:15:05.000Z', 'size': '3000', 'contentType':'138'}
+    #response = requests.get('https://'+host+'/machine-api/device/665542/lastCommunication',auth =aws_auth,headers=headers)
+    response = requests.get('https://'+host+'/machine-api/device/665542', params=params, auth=aws_auth, headers=headers)
+    #print("\n", response.content)
+    decoded_content = response.content
+    #print("\n", decoded_content)
+    resp = json.loads(decoded_content)
+    #print("\n", resp)
+
+    itrcnt = 0
+    #print(resp['totalRecords'])
+    #print(resp)
+
+    while itrcnt < resp['totalRecords']:
+        encodedcontent = resp['IngestApiRecords'][itrcnt]['content']
+        #print("\n", encodedcontent)
+        decodedcontent = base64.b64decode(encodedcontent)
+        #print("\n", decodedcontent)
+        #javadecoding = javaobj.loads(decodedcontent)
+        #print('--------------------------')
+        #print(javadecoding)
+        #new_data = marshal.loads(decodedcontent)
+        #print("\n", new_data)
+
+        with open(decodedcontent, "rb") as fd:
+            jobj = fd.read()
+            javadecoding = javaobj.loads(jobj)
+            #marshaller = javaobj.JavaObjectUnmarshaller(fd)
+            #pobj = marshaller.readObject()
+            print(javadecoding)
+        #print("\n", decodedcontent)
+        #print(resp['IngestApiRecords'][itrcnt]['metaData'])
+        itrcnt = itrcnt+1
+
+
+def get_auth(host, region):
+    session = boto3.session.Session()
+    credentials = session.get_credentials().get_frozen_credentials()
+    #print(credentials)
+    retval = AWSRequestsAuth(
+        aws_access_key=credentials.access_key,
+        aws_secret_access_key=credentials.secret_key,
+        aws_token=credentials.token,
+        aws_host=host,
+        aws_region=region,
+        aws_service='execute-api'
+    )
+
+    return retval
+
+
+if __name__ == "__main__":
+    #os.system('gimme-aws-creds')
+    main(host="ingestapi.prod.us.i01.c01.johndeerecloud.com", region="us-east-1")
+    #main(host="8wvwt27o03.execute-api.us-east-1.amazonaws.com",region="us-east-1")
